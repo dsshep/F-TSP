@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Extensions.fs" />
+        <Compile Include="Types.fs" />
+        <Compile Include="Crossover.fs" />
+        <Compile Include="Selection.fs" />
+        <Compile Include="ProblemFunctions.fs" />
+        <Compile Include="Mutation.fs" />
+        <Compile Include="Greedy.fs" />
+        <Compile Include="BruteForce.fs" />
+        <Compile Include="Genetic.fs" />
+        <Compile Include="Lookup.fs" />
+    </ItemGroup>
+
+</Project>
