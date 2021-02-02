@@ -135,6 +135,7 @@ let calculate (lookup: IDictionary<(City * City), float>) (cities: City list) =
         
     let stitched =
         stitchPoints (entryPoints.[0]) final [ entryPoints.[0] ]
+        |> List.toArray
         
     let distance = ProblemFunctions.calculateRouteDistance lookup stitched
     

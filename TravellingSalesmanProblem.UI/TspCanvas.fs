@@ -29,8 +29,9 @@ module Canvas =
         let y = ((loc.Y - state.YMin) / state.YScale) + offset
         (x, y)
     
-    let calculateLines state (cities: City list) (color: ISolidColorBrush) =
+    let calculateLines state (cities: City array) (color: ISolidColorBrush) =
         cities
+        |> Array.toList
         |> List.pairwise
         |> List.indexed
         |> List.map (fun (i, (c1, c2)) ->
@@ -51,10 +52,10 @@ module Canvas =
     let init x y cities lookup =
         let halfEllipseWidthHeight = ellipseWidthHeight / 2.0
         
-        let xMax = cities |> List.map (fun c -> c.Location.X) |> List.max
-        let yMax = cities |> List.map (fun c -> c.Location.Y) |> List.max
-        let xMin = cities |> List.map (fun c -> c.Location.X) |> List.min
-        let yMin = cities |> List.map (fun c -> c.Location.Y) |> List.min
+        let xMax = cities |> Array.map (fun c -> c.Location.X) |> Array.max
+        let yMax = cities |> Array.map (fun c -> c.Location.Y) |> Array.max
+        let xMin = cities |> Array.map (fun c -> c.Location.X) |> Array.min
+        let yMin = cities |> Array.map (fun c -> c.Location.Y) |> Array.min
         let deltaX = (xMax - xMin) |> abs
         let deltaY = (yMax - yMin) |> abs
         
@@ -65,7 +66,7 @@ module Canvas =
             Id = 1
             X = x
             Y = y
-            Cities = cities
+            Cities = cities |> Array.toList
             CityViews = []
             LineViews = []
             Lookup = lookup
@@ -82,7 +83,7 @@ module Canvas =
         
         let cityViews =
             cities
-            |> List.map (fun c ->
+            |> Array.map (fun c ->
                 let x', y' = calcRelativePoint initialState c.Location halfEllipseWidthHeight
                 
                 DockPanel.create [
@@ -102,6 +103,7 @@ module Canvas =
                             TextBlock.top y' 
                         ] ]
                     ])
+            |> Array.toList
         
         let lineViews = calculateLines initialState cities Brushes.Red
         
@@ -126,7 +128,7 @@ module Canvas =
                 let newLines = calculateLines state cities Brushes.Orange
                 { state with
                     LineViews = newLines
-                    Cities = update.Best
+                    Cities = update.Best |> Array.toList
                     GenerationAcc = state.GenerationAcc @ [ update ]
                     Generation = state.Generation + 1 }, Operations.pulse
                 
@@ -147,7 +149,7 @@ module Canvas =
                 Completed = true
                 Result = Some g }, Cmd.none
         
-    let view (state: State) (_) =
+    let view (state: State) _ =
         let message =
             match state.Result with
             | Some g ->

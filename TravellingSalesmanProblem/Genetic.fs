@@ -12,30 +12,27 @@ module Genetic =
     type CalculationResult = {
         TotalIterations: int
         CurrentIteration: int
-        Population: City list list
+        Population: City array array
         PopulationFitness: PopulationFitness
-        GenerationBests: float list
+        GenerationBests: float array
         MutationRate: float
-        Record: (float * City list)
+        Record: (float * City array)
         Elapsed: TimeSpan
         DiversityPercentage: int
     }
     
     type Progress = {
         Generation: int
-        GenerationBest: City list
+        GenerationBest: City array
         GenerationBestScore: float
-        Best: City list
+        Best: City array
         BestScore: float
     }
 
-    let calculate seed (progress: Progress -> unit) costFunction lookup (cities: City list) = 
+    let calculate seed (progress: Progress -> unit) costFunction lookup (cities: City array) = 
         let random = Random(seed)
         let crossOver =
             Crossover.partiallyMatchedRandom random
-            //Crossover.cycle
-            //Crossover.primitive random
-            //Crossover.cycle2
         let totalIterations = 3 * cities.Length
         let populationCount = 400
         let allGenerations = HashSet<_>(totalIterations * populationCount)
@@ -44,15 +41,16 @@ module Genetic =
             let sw = Stopwatch.StartNew()
             let fitnessOfPopulation = ProblemFunctions.fitnessOfPopulation lookup
             let initialPopulation =
-                [ 1..populationCount ]
-                |> List.map (fun _ -> Mutation.flip random cities)
-                |> List.distinct
+                [| 1..populationCount |]
+                |> Array.map (fun _ -> Mutation.flip random cities)
+                |> Array.distinct
                 
             let initialPopulation =
-                initialPopulation @
-                ([ 1..(populationCount - initialPopulation.Length) ]
-                |> List.map (fun _ -> Mutation.inversion random cities))
-            
+                Array.append
+                    initialPopulation
+                    ([| 1..(populationCount - initialPopulation.Length) |]
+                    |> Array.map (fun _ -> Mutation.inversion random cities))
+                
             let initialFitness = fitnessOfPopulation infinity initialPopulation
             
             let rec loop state =
@@ -80,33 +78,27 @@ module Genetic =
                             let a =
                                 if state.CurrentIteration % 3 = 0 then
                                     BruteForce.localBruteForce random lookup o
-                                    //Mutation.inversion random o
-                                    //Mutation.neighbour random o
-                                    //Mutation.mutate random state.MutationRate o
                                 else
-                                    //BruteForce.localBruteForce2 random lookup o
-                                    //Mutation.neighbour random o
                                     Mutation.inversion random o
-                                    //Mutation.mutate random state.MutationRate o
                                 
-                            let b = Mutation.inversion random o //scramble
+                            let b = Mutation.inversion random o
                             let c = Mutation.inversion random o
                             
                             [| o; a; b; c |])
                     
                     let populationList = 
-                        population |> Array.toList
+                        population
                         
                     let newFitness =
                         fitnessOfPopulation
                             (fst state.Record)
                             (populationList)
                     
-                    let bestFitness = newFitness.Fitness |> List.max
+                    let bestFitness = newFitness.Fitness |> Array.max
                     
                     let generationBestIndex =
                         newFitness.Fitness
-                        |> List.findIndex (fun f -> f = bestFitness)
+                        |> Array.findIndex (fun f -> f = bestFitness)
                         
                     let best = population.[generationBestIndex] |> costFunction
                     
@@ -128,16 +120,16 @@ module Genetic =
                         | None -> state.Record
                     
                     loop {
-                        TotalIterations = state.TotalIterations
-                        CurrentIteration = state.CurrentIteration + 1
-                        Population = populationList
-                        PopulationFitness = newFitness
-                        GenerationBests = state.GenerationBests @ [ best ]
-                        MutationRate = newMutationRate
-                        Record = record
-                        Elapsed = sw.Elapsed
-                        DiversityPercentage =
-                            ((allGenerations.Count |> float) / ((totalIterations * populationCount) |> float)) * 100.0 |> int
+                        state with
+                            CurrentIteration = state.CurrentIteration + 1
+                            Population = populationList
+                            PopulationFitness = newFitness
+                            GenerationBests = (Array.append state.GenerationBests [| best |])
+                            MutationRate = newMutationRate
+                            Record = record
+                            Elapsed = sw.Elapsed
+                            DiversityPercentage =
+                                ((allGenerations.Count |> float) / ((totalIterations * populationCount) |> float)) * 100.0 |> int
                     }
                     
             loop {
@@ -145,7 +137,7 @@ module Genetic =
                 CurrentIteration = 0
                 Population = initialPopulation
                 PopulationFitness = initialFitness
-                GenerationBests = []
+                GenerationBests = Array.empty
                 MutationRate = 10.0
                 Record = initialFitness.Record.Value
                 Elapsed = sw.Elapsed
@@ -154,5 +146,6 @@ module Genetic =
         try 
             run()
         with e ->
-            failwithf "Genetic algorithm failure: %A" e
+            printfn "Genetic algorithm failure: %A" e
+            reraise()
             

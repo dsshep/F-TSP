@@ -23,7 +23,6 @@ type MainWindow() as this =
                 let segments = c.Split(',')
                 { Name = segments.[0]
                   Location = { X = segments.[1] |> float; Y = segments.[2] |> float } })
-            |> Array.toList
         
         let lookup = Lookup.buildLookup cities
         

@@ -18,14 +18,14 @@ module Operations =
                 let result =
                     Genetic.calculate
                         5
-                        (fun g -> queue.Enqueue g)
+                        queue.Enqueue
                         (ProblemFunctions.calculateRouteDistance lookup)
                         lookup
                         greedySortedCities
                         
                 return result
             }
-        
+         
         Cmd.OfAsync.perform sub () Msg.Complete, queue
 
     let pulse =
